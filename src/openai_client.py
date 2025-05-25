@@ -19,7 +19,8 @@ class OpenAIClient:
         
         # 시스템 프롬프트 로드
         try:
-            with open("/Users/user/projects/somtimes/workbot/prompts/system_prompt.txt", "r", encoding="utf-8") as f:
+            prompt_path = os.path.join(config.BASE_DIR, 'prompts', 'system_prompt.txt')
+            with open(prompt_path, "r", encoding="utf-8") as f:
                 self.system_prompt = f.read()
         except Exception as e:
             logger.error(f"Failed to load system prompt: {e}")
@@ -83,8 +84,7 @@ class OpenAIClient:
             분석 결과 딕셔너리
         """
         try:
-            # thread_system_prompt.txt 로드
-            prompt_path = os.path.join(os.path.dirname(__file__), '../prompts/thread_system_prompt.txt')
+            prompt_path = os.path.join(config.BASE_DIR, 'prompts', 'thread_system_prompt.txt')
             with open(prompt_path, 'r', encoding='utf-8') as f:
                 thread_system_prompt = f.read()
             prompt = thread_context
