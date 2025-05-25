@@ -5,7 +5,7 @@ import json
 import logging
 from typing import Dict, Optional, List
 from openai import OpenAI
-from .config import config
+from .config import config, BASE_DIR
 import openai
 import os
 import traceback
@@ -19,7 +19,7 @@ class OpenAIClient:
         
         # 시스템 프롬프트 로드
         try:
-            prompt_path = os.path.join(config.BASE_DIR, 'prompts', 'system_prompt.txt')
+            prompt_path = os.path.join(BASE_DIR, 'prompts', 'system_prompt.txt')
             with open(prompt_path, "r", encoding="utf-8") as f:
                 self.system_prompt = f.read()
         except Exception as e:
@@ -84,7 +84,7 @@ class OpenAIClient:
             분석 결과 딕셔너리
         """
         try:
-            prompt_path = os.path.join(config.BASE_DIR, 'prompts', 'thread_system_prompt.txt')
+            prompt_path = os.path.join(BASE_DIR, 'prompts', 'thread_system_prompt.txt')
             with open(prompt_path, 'r', encoding='utf-8') as f:
                 thread_system_prompt = f.read()
             prompt = thread_context

@@ -28,6 +28,8 @@ message_processor = MessageProcessor()
 
 app = FastAPI()
 
+processed_event_ids = set()
+
 slack_router = APIRouter(prefix="/slack", tags=["slack"])
 
 # @app.on_event("startup")
