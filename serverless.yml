@@ -1,0 +1,76 @@
+service: workbot
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: ap-northeast-2
+  timeout: 300
+  memorySize: 512
+  
+  environment:
+    SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
+    SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
+    SLACK_CHANNEL_ID: ${env:SLACK_CHANNEL_ID}
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+    OPENAI_MODEL: ${env:OPENAI_MODEL, 'gpt-4'}
+    JIRA_SERVER: ${env:JIRA_SERVER}
+    JIRA_USERNAME: ${env:JIRA_USERNAME}
+    JIRA_API_TOKEN: ${env:JIRA_API_TOKEN}
+    JIRA_PROJECT_KEY: ${env:JIRA_PROJECT_KEY, 'SOM'}
+    AWS_REGION: ${env:AWS_REGION, 'ap-northeast-2'}
+    DYNAMODB_TABLE_NAME: ${self:service}-processed-messages-${self:provider.stage}
+    LOG_LEVEL: ${env:LOG_LEVEL, 'INFO'}
+    MESSAGE_LOOKBACK_MINUTES: ${env:MESSAGE_LOOKBACK_MINUTES, '5'}
+  
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:DeleteItem
+        - dynamodb:Query
+        - dynamodb:Scan
+      Resource:
+        - Fn::GetAtt: [ProcessedMessagesTable, Arn]
+
+functions:
+  processMessages:
+    handler: src.main.lambda_handler
+    events:
+      - schedule: rate(5 minutes)
+    description: "Process Slack messages and create Jira tickets"
+
+  handleSlackInteraction:
+    handler: src.slack_handler.lambda_handler
+    events:
+      - http:
+          path: slack/interactions
+          method: post
+    description: "Handle Slack interactive components"
+
+resources:
+  Resources:
+    ProcessedMessagesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: message_hash
+            AttributeType: S
+        KeySchema:
+          - AttributeName: message_hash
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    slim: true
