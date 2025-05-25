@@ -9,7 +9,7 @@ from .slack_client import SlackClient
 from .jira_client import JiraClient
 from .openai_client import OpenAIClient
 from .message_processor import MessageProcessor, extract_ticket_candidates
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, APIRouter
 from fastapi.responses import JSONResponse, PlainTextResponse
 # from . import scheduler
 
@@ -28,6 +28,8 @@ message_processor = MessageProcessor()
 
 app = FastAPI()
 
+slack_router = APIRouter(prefix="/slack", tags=["slack"])
+
 # @app.on_event("startup")
 # def on_startup():
 #     scheduler.start_scheduler()
@@ -36,7 +38,7 @@ app = FastAPI()
 def health():
     return {"status": "ok"}
 
-@app.post("/slack/interactions")
+@slack_router.post("/interactions")
 async def slack_interactions(request: Request):
     form = await request.form()
     payload = form.get('payload')
@@ -50,9 +52,7 @@ async def slack_interactions(request: Request):
             return PlainTextResponse("티켓 생성에 실패했습니다.", status_code=200)
     return PlainTextResponse("No payload", status_code=400)
 
-processed_event_ids = set()
-
-@app.post("/slack/event")
+@slack_router.post("/event")
 async def slack_event(request: Request):
     body = await request.json()
     event_id = body.get("event_id")
@@ -96,9 +96,11 @@ async def slack_event(request: Request):
             return JSONResponse(content={"ok": True})
     return JSONResponse(content={"ok": True})
 
-@app.get("/slack/event")
+@slack_router.get("/event")
 def slack_event_health():
     return {"status": "ok"}
+
+app.include_router(slack_router)
 
 def process_messages():
     """메시지를 처리하는 메인 로직"""
