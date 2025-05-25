@@ -96,6 +96,10 @@ async def slack_event(request: Request):
             return JSONResponse(content={"ok": True})
     return JSONResponse(content={"ok": True})
 
+@app.get("/slack/event")
+def slack_event_health():
+    return {"status": "ok"}
+
 def process_messages():
     """메시지를 처리하는 메인 로직"""
     try:
