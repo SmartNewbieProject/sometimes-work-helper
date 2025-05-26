@@ -37,8 +37,9 @@ class JiraClient:
         }
         if assignee:
             fields['assignee'] = {'name': assignee}
-        if priority:
-            fields['priority'] = {'name': priority}
+        if not priority:
+            priority = 'Medium'
+        fields['priority'] = {'name': priority}
         try:
             issue = self.jira.create_issue(fields=fields)
             return issue.key
