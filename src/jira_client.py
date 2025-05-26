@@ -26,6 +26,7 @@ class JiraClient:
             "버그": "10022",
             "스토리": "10023"
         }
+        JIRA_PRIORITIES = {"Highest", "High", "Medium", "Low"}
         if issue_type not in valid_types:
             issue_type = "작업"
         issue_type_id = ISSUE_TYPE_ID_MAP.get(issue_type, "10021")
@@ -37,8 +38,10 @@ class JiraClient:
         }
         if assignee:
             fields['assignee'] = {'name': assignee}
-        if not priority:
-            priority = 'Medium'
+        priority = (priority or "Medium")
+        if priority not in JIRA_PRIORITIES:
+            logger.warning(f"허용되지 않는 priority 값: {priority}, 기본값 'Medium'으로 대체")
+            priority = "Medium"
         fields['priority'] = {'name': priority}
         try:
             issue = self.jira.create_issue(fields=fields)
